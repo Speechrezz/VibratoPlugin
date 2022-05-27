@@ -14,7 +14,7 @@
 #define SPEED_ID "speed"
 #define SPEED_NAME "Speed"
 #define SPEED_MIN 0.1f
-#define SPEED_MAX 100.f
+#define SPEED_MAX 50.f
 
 #include <JuceHeader.h>
 
@@ -70,7 +70,8 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void processDelay(juce::dsp::ProcessContextReplacing<float> context);
 
-    int prevTime{ 0 };
+    float prevPhase{ 0.f };
+    juce::LinearSmoothedValue<float> magnitude{ 0 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VibratoAudioProcessor)
 };

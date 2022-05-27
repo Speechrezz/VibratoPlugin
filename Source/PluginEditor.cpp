@@ -37,7 +37,7 @@ VibratoAudioProcessorEditor::VibratoAudioProcessorEditor (VibratoAudioProcessor&
     speedKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 150, 25);
     speedKnob.setTextBoxIsEditable(true);
     speedKnob.setRange(SPEED_MIN, SPEED_MAX);
-    speedKnob.setSkewFactorFromMidPoint(2.f);
+    speedKnob.setSkewFactorFromMidPoint(5.f);
     speedKnob.setTextValueSuffix(" Hz");
 
     speedKnobLabel.setText("Speed", juce::dontSendNotification);

@@ -8,7 +8,9 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+
 #define TWOPI 6.28318
+#define PI 3.14159
 
 //==============================================================================
 VibratoAudioProcessor::VibratoAudioProcessor()
@@ -35,7 +37,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout VibratoAudioProcessor::creat
 
     std::vector < std::unique_ptr <juce::RangedAudioParameter> > params;
 
-    auto speedParam = std::make_unique<juce::AudioParameterFloat>(SPEED_ID, SPEED_NAME, SPEED_MIN, SPEED_MAX, 1.f);
+    auto speedParam = std::make_unique<juce::AudioParameterFloat>(SPEED_ID, SPEED_NAME, SPEED_MIN, SPEED_MAX, 10.f);
     params.push_back(std::move(speedParam));
 
     auto amountParam = std::make_unique<juce::AudioParameterFloat>(AMOUNT_ID, AMOUNT_NAME, 0.f, 100.f, 20.f);
@@ -116,6 +118,8 @@ void VibratoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 
     delayLine.reset();
     delayLine.prepare(spec);
+
+    magnitude.reset(sampleRate, 0.01);
 }
 
 void VibratoAudioProcessor::releaseResources()
@@ -168,28 +172,70 @@ void VibratoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
 
 void VibratoAudioProcessor::processDelay(juce::dsp::ProcessContextReplacing<float> context)
 {
+    /*
+    * In order to allow for realtime changing of the 'speed', we must calculate the current
+    * magnitude in terms of the phase.
+    * 
+    * For the system to oscillate x times a second (for a sine function):
+    * 
+    *   0->2pi in 1/x a second
+    *   0->2pi in 1/x * samplerate
+    * 
+    * So each sample, the phase must increase by (phase delta):
+    * 
+    *               2pi
+    *   pd = ------------------
+    *         1/x * samplerate
+    * 
+    * To make this more flexible for other waveforms (other than sine), we can remove the 2pi:
+    * 
+    *                1                 x
+    *   pd = ------------------ = ------------
+    *         1/x * samplerate     samplerate
+    * 
+    * And we can multiply the 2pi later, when specifically doing the sine waveform:
+    * 
+    *   delay = 1 + magnitude * (1 + sin(2pi * phase))
+    *   phase += pd
+    * 
+    * The extra math is to ensure the delay is never below +1. Weird stuff happens when the
+    * the delay is below 1.
+    * 
+    * This way, the phase will NOT drastically change when changing the speed, instead the
+    * phase delta (pd) will change.
+    */
 
     const auto bufferSize = context.getInputBlock().getNumSamples();
     const auto numChannels = context.getInputBlock().getNumChannels();
 
     const auto bufferOut = context.getOutputBlock();
 
-    const auto amount = treeState.getRawParameterValue(AMOUNT_ID)->load();
-    const auto speed = treeState.getRawParameterValue(SPEED_ID)->load();
-    const int period = getSampleRate() / speed;
+    const auto amount = treeState.getRawParameterValue(AMOUNT_ID)->load() * 2.f;
+    const auto prevMag = magnitude.getCurrentValue();
 
-    // iterate through each sample
+    const auto speed = treeState.getRawParameterValue(SPEED_ID)->load() / 2.f;
+
+    const float pd = speed / getSampleRate(); // phase delta
+    float phase;
+
+    // Iterate through each sample
     for (int channel = 0; channel < numChannels; ++channel)
     {
+        // Reset phase, so both channels will behave identically
+        phase = prevPhase;
+
+        // Reset magnitude, so both channels will behave identically
+        magnitude.setCurrentAndTargetValue(prevMag);
+        magnitude.setTargetValue(amount);
 
         auto* samplesIn = context.getInputBlock().getChannelPointer(channel);
 
-        // process audio...
+        // Process audio...
         for (int sample = 0; sample < bufferSize; ++sample) {
 
             // Update delay times (using sine function)
-            const float newDelay = 1.f + amount + amount * std::sin(TWOPI / period * (sample + prevTime));
-            //DBG("newDelay: " << newDelay);
+            const float newDelay = 1.f + magnitude.getNextValue() * (1.f + std::sin(TWOPI * phase));
+            phase += pd;
             delayLine.setDelay(newDelay);
 
             float delayedSample = delayLine.popSample(channel);
@@ -197,13 +243,14 @@ void VibratoAudioProcessor::processDelay(juce::dsp::ProcessContextReplacing<floa
             float delayIn = samplesIn[sample];
             delayLine.pushSample(channel, delayIn);
 
-            // Stores only the delay in the wetOut
-            // will have to combine with dry signal later
+            // Stores delay signal in output
             bufferOut.setSample(channel, sample, delayedSample);
         }
     }
 
-    prevTime = (prevTime + bufferSize) % period;
+    // Keep the phase between 0 and 2pi
+    prevPhase = std::fmod(phase, 1.f);
+    // DBG("pd: " << pd * 360.f << ", phase: " << prevPhase * 360.f);
 }
 
 //==============================================================================
