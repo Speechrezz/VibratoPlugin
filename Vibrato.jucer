@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="q3gZDo" name="Vibrato" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.1"
+              companyName="Speechrezz" pluginVST3Category="Fx,Pitch Shift">
   <MAINGROUP id="ZALVp4" name="Vibrato">
     <GROUP id="{624F862F-1F4B-1C30-77F0-985964FE4A9C}" name="Source">
+      <GROUP id="{04FDD165-88E7-FDED-D3B3-85CB53E4F8D4}" name="GUI">
+        <FILE id="U1Wcti" name="CustomLook.cpp" compile="1" resource="0" file="Source/GUI/CustomLook.cpp"/>
+        <FILE id="XK8gWu" name="CustomLook.h" compile="0" resource="0" file="Source/GUI/CustomLook.h"/>
+        <FILE id="QopVbT" name="Dial.h" compile="0" resource="0" file="Source/GUI/Dial.h"/>
+        <FILE id="kl2frL" name="MainLayout.cpp" compile="1" resource="0" file="Source/GUI/MainLayout.cpp"/>
+        <FILE id="FxHtg1" name="MainLayout.h" compile="0" resource="0" file="Source/GUI/MainLayout.h"/>
+      </GROUP>
       <FILE id="wBR5DU" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="FoSAd7" name="PluginProcessor.h" compile="0" resource="0"

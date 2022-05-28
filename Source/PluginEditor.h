@@ -8,8 +8,12 @@
 
 #pragma once
 
+#define WINDOW_WIDTH 300
+#define WINDOW_HEIGHT 250
+
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "GUI/MainLayout.h"
 
 //==============================================================================
 /**
@@ -27,13 +31,7 @@ public:
 private:
     VibratoAudioProcessor& audioProcessor;
 
-    juce::Slider amountKnob;
-    std::unique_ptr <juce::AudioProcessorValueTreeState::SliderAttachment> amountKnobAttach;
-    juce::Label amountKnobLabel;
-
-    juce::Slider speedKnob;
-    std::unique_ptr <juce::AudioProcessorValueTreeState::SliderAttachment> speedKnobAttach;
-    juce::Label speedKnobLabel;
+    MainLayout mainLayout;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VibratoAudioProcessorEditor)
 };
