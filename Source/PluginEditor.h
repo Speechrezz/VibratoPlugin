@@ -10,6 +10,7 @@
 
 #define WINDOW_WIDTH 300
 #define WINDOW_HEIGHT 250
+#define WINDOW_SCALE_ID "WindowScale"
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
@@ -30,6 +31,8 @@ public:
 
 private:
     VibratoAudioProcessor& audioProcessor;
+
+    juce::ApplicationProperties properties;
 
     MainLayout mainLayout;
 
