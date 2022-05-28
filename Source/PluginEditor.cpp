@@ -46,6 +46,7 @@ VibratoAudioProcessorEditor::VibratoAudioProcessorEditor (VibratoAudioProcessor&
 
 VibratoAudioProcessorEditor::~VibratoAudioProcessorEditor()
 {
+    properties.closeFiles();
 }
 
 //==============================================================================
@@ -58,5 +59,6 @@ void VibratoAudioProcessorEditor::resized()
     // Calculate, store and apply window scale
     const float scale = (float)getWidth() / (float)WINDOW_WIDTH;
     properties.getUserSettings()->setValue(WINDOW_SCALE_ID, scale);
+    properties.saveIfNeeded();
     mainLayout.setTransform(juce::AffineTransform::scale(scale));
 }
